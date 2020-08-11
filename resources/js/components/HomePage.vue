@@ -36,8 +36,8 @@ export default {
 			navTabs: [
                 {label: 'OfficeManager', icon: 'pi pi-fw pi-home', to: '/'},
                 {label: 'Dokumenty', icon: 'icon-folders', to: '/documents'},
-                {label: 'Umowy', icon: 'icon-summary', to: '/agreement'},
-                {label: 'Skany', icon: 'icon-documents', to: '/library'},
+                {label: 'Umowy', icon: 'icon-scan', to: '/agreement'},
+                {label: 'Skany', icon: 'icon-counter', to: '/library'},
                 {label: 'Sprzęt', icon: 'icon-desk', to: '/equipment'},
                 {label: 'Użytkownicy', icon: 'icon-team', to: '/users'}
             ],
@@ -81,6 +81,7 @@ export default {
     padding-left: 10px;
     padding-top: 140px;
     overflow: auto;
+    padding-bottom: 140px;
 }
 .content{
     position: fixed;

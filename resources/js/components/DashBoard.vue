@@ -3,7 +3,10 @@
         <div class="row justify-content-md-center align-items-center" style="height:100%; width:77%; margin:auto">
             <div v-for="panel in panels" v-bind:key="panel.id"
             class="panel-brick"  >
-                <div class="panel-bric-icon" > <i :class="panel.icon" ></i> </div>
+                <div class="panel-bric-icon" >
+<span :class="panel.icon"><span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span></span>
+
+                </div>
                 <p class="panel-brick-tittle "> {{ panel.name }} </p>
             </div>
         </div>
@@ -26,17 +29,22 @@ export default {
                 },
                 {
                     id:2,
-                    name:'Umowy',
-                    icon:'icon-summary'
+                    name:'Skany',
+                    icon:'icon-scan'
                 },
                 {
                     id:5,
-                    name:'Skany',
-                    icon:'icon-documents'
+                    name:'Kontrahenci',
+                    icon:'icon-counter'
                 },
                 {
                     id:3,
                     name:'Sprzęt',
+                    icon:'icon-computer'
+                },
+                {
+                    id:6,
+                    name:'Licencje',
                     icon:'icon-desk'
                 },
                 {
@@ -79,13 +87,15 @@ export default {
     transition: 0.5s;
     border-radius: 13px;
     cursor: pointer;
-    min-width: 270px;
-    min-height: 270px;
+    min-width: 210px;
+    min-height: 220px;
+    border-style: outset;
+    border-width: 1px;
 
 }
 
 .panel-bric-icon{
-    font-size: 130px;
+    font-size: 110px;
     color: #007ad9;
     text-align: center;
 }

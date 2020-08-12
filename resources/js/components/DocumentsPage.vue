@@ -28,13 +28,14 @@ export default {
     data() {
         return {
             columns : [
-                {field: 'id', header: 'ID' },
-                {field: 'name', header: 'Name' },
-                {field: 'category', header: 'Category' },
-                {field: 'category2', header: 'Category2' },
-                {field: 'category3', header: 'Category3' },
-                {field: 'category4', header: 'Category4' },
-                {field: 'quantity', header: 'Quantity' }
+                {field: 'id', sortable:true, header: 'ID' },
+                {field: 'name', sortable:true, header: 'Name' },
+                {field: 'category', sortable:true, header: 'Category' },
+                {field: 'category2', sortable:true, header: 'Category2' },
+                {field: 'category3', sortable:true, header: 'Category3' },
+                {field: 'category4', sortable:true, header: 'Category4' },
+                {field: 'quantity', sortable:true, header: 'Quantity' },
+                
             ],
             selectedColumns:[],
             resizedColumnTable: [],
@@ -44,6 +45,8 @@ export default {
     created() {
     },
     mounted() {
+        this.selectedColumns = this.columns
+
     },
     computed:{
     },
@@ -79,7 +82,7 @@ export default {
         },
         getSaveStateConfig() {
             return {
-                'cacheKey': 'DocumentsPage311111211',
+                'cacheKey': 'DocumentsPagee1ds3232',
             };
         },
     }

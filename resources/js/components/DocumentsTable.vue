@@ -4,23 +4,24 @@
             <div class="row justify-content-center " style="display: contents;" >
                 <div class="card">
                     <DataTable
-                        editMode="row"
                         paginatorTemplate="CurrentPageReport FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink RowsPerPageDropdown"
                         currentPageReportTemplate="Wyniki od {first} do {last} z {totalRecords}"
                         :rowsPerPageOptions="[5,10,15,20,30,50]"
+                        editMode="row"
+                        dataKey="id"
                         @row-edit-init="onRowEditInit"
                         @row-edit-cancel="onRowEditCancel"
+                        @row-edit-save="onRowEditSave"
                         :editingRows.sync="editingRows"
-                        dataKey="id"
                         removableSort
-                        :value="updatedTableData"
+                        :value="filtredTableDataByMatch"
                         class="p-datatable-responsive-demo"
                         :style="'font-size:'+fontSize+'px'"
-                        :resizableColumns="toogleResize"
+                        :resizableColumns="true"
                         :reorderableColumns="true"
+                        :selection.sync="selectedProducts"
                         columnResizeMode="fit"
                         @column-resize-end="saveThisColumtSize"
-                        :selection.sync="selectedTableData"
                         @filter='getFiltredItems'
                         @column-reorder='columnReorder'
                         :paginator="true"
@@ -33,35 +34,38 @@
                                 <Button icon="pi pi-cog" type="button" label="USTAWIENIA" @click="toggle" />
                                 
                                 
-                                <OverlayPanel ref="op" :showCloseIcon="false" :dismissable="true">
+                                <OverlayPanel ref="op" :showCloseIcon="false"  :dismissable="true" >
 
-                                    <div id="table-header-options">
-                                        <div  class="table-options-row"  >
-
-                                            <div class="table-options-row-tittle"  > SZEROKOŚĆ KOLUMN </div>
-
-                                            <div class="teable-header-options-resizeable-column" >
-                                                <!-- <Checkbox v-model="toogleResize" :binary="true" id="resizeable-check" style="float:left; margin-top: 2px" />
-                                                <label for="resizeable-check"><p style="float:left; margin:0; margin-left: 15px;cursor: pointer;" > ZMIENNY ROZMIAR </p> </label> -->
-                                                <button style="float: right; cursor: pointer;" @click="fitColumnsToWindowWidth">WYRÓWNAJ</button>
+                                            <div class="table-header-options" >
+                                                <div class="table-header-options-tittle">
+                                                    WYRÓWNAJ KOLUMNY
+                                                </div>
+                                                <div class="table-header-options-items" >
+                                                    <Button class="icon-btn" @click="fitColumnsToWindowWidth"> <i class="pi pi-align-left"></i> <i class="pi pi-align-center"></i> <i class="pi pi-align-right"></i> </Button>
+                                                </div>
+                                                
                                             </div>
-                                            <div class="teable-header-options" >
+                                            <div class="table-header-options" >
+                                                <div class="table-header-options-tittle">
+                                                    WYRÓWNAJ KOLUMNY
+                                                </div>
+                                                <div class="table-header-options-items" >
+                                                    <Button class="icon-btn" @click="fitColumnsToWindowWidth"> <i class="pi pi-align-left"></i> <i class="pi pi-align-center"></i> <i class="pi pi-align-right"></i> </Button>
+                                                </div>
+                                                
+                                            </div>
+                                            <!-- <div class="table-header-options" >
                                                 <p> ROZMIAR CZCIONKI </p>  
                                                 <Button type="button" @click="fontSize--" icon="pi pi-minus-circle" class="font-sizer" > </Button>  
                                                 <p>{{ fontSize }}</p>
                                                 <Button type="button" @click="fontSize++" icon="pi pi-plus-circle" class="font-sizer" > </Button> 
-                                            </div>
+                                            </div> -->
 
-
-                                            <div class="table-options-row-tittle"  > DOSTOSUJ KOLUMNY </div>
                                             <MultiSelect
                                                 :value="selectedColumns"
-                                                :options="columns" optionLabel="header"
+                                                :options="columnsToToggle" optionLabel="header"
                                                 @input="onToggle"
                                                 placeholder="Dopasuj kolumny" style="width: 20em"/>
-
-                                        </div>
-                                    </div>
 
 
 
@@ -74,27 +78,40 @@
                                                 <div>{{slotProps.item}}</div>
                                             </template>
                                         </AutoComplete>
-                                        <Button style="float:right"  icon="pi pi-refresh" type="button" label="WYCZYŚĆ FILTRY" @click="filters={}  , makeToast('info' , 'Wyczyszczono filtrowanie') , showMessage = true" />
+                                        <Button style="float:right"  icon="pi pi-refresh" type="button" label="WYCZYŚĆ FILTRY" @click="clearFilter()" />
                                 </div>
                                 
 
 
                             </div>
                         </template>
-                        <Column sortable v-for="(col, index) of selectedColumns" :field="col.field" :columnKey="col.field"   :key="col.field + '_' + index">
-                                <template #header>
-                                    <span style="float:left" > {{ col.header }}</span>
 
-                                </template>
-                                <template v-if="col.field != 'id'" #editor="slotProps">
-                                    <InputText  v-model="slotProps.data[slotProps.column.field]" autofocus />
-                                </template>
+                        <Column selectionMode="multiple" headerStyle="width: 2em" :key="'col_check'" :columnKey="'col_check'" > </Column>
+                        
+                        <Column v-for="(col, index) of selectedColumns" 
+                            :headerStyle="col.headerStyle"
+                            :sortable="col.sortable" 
+                            :selectionMode='col.selectionMode' 
+                            :field="col.field" 
+                            :header="col.header" 
+                            :columnKey="col.field" 
+                            :key="col.field + '_' + index"
+                            :rowEditor='col.rowEditor'
+                            >
+                            <template #editor="slotProps">
+                                <InputText v-if="col.field != 'id' " v-model="slotProps.data[slotProps.column.field]"/>
+                                <span v-else > {{ slotProps.data[slotProps.column.field] }} </span>
+                            </template>
+
                         </Column>
-                        <Column :rowEditor="true" >
-                            <template #header style="max-width:100px">
-                                EDYCJA
+                        <Column :rowEditor="true" headerStyle="width:7rem" bodyStyle="text-align:center" :key="'col_edit'" :columnKey="'col_edit'" >
+                        </Column>
+                        <Column headerStyle="width:4rem" bodyStyle="text-align:center" :key="'col_remove'" :columnKey="'col_remove'" >
+                            <template #body="slotProps">
+                                <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteProduct(slotProps.data)" />
                             </template>
                         </Column>
+                        
 
                         <template #paginatorLeft>
                             <Button type="button" icon="pi pi-refresh" class="p-button-text" />
@@ -105,6 +122,7 @@
                     </DataTable>
                 </div>
             </div>
+            <div v-if="showTheFog" class="show-me-the-fog"></div>
         </div>
 </template>
 
@@ -119,6 +137,12 @@ export default {
     props:['pageName' ,  'columns' , 'resizedColumnTable' , 'selectedColumns' , 'toogleResize'],
     data() {
         return {
+            editingRows: [],
+            editingCellRows: {},
+            selectedProducts:null,
+            refreshRotate:0,
+            filterIsActive:true,
+            showTheFog:false,
             nowSearch:'',
             fontSize:14,
             tableData:[
@@ -152,6 +176,7 @@ export default {
                 { id:24341 ,name: 'Gold Phone Case', category: "75", quantity: 54, agre: 21212, thisYearProfit: 12533}
             ],
             filtredTableData:[],
+            filtredTableDataByMatch:[],
             selectedTableData:[],
             resizedColumnTableLength :0,
             filters:{
@@ -170,73 +195,135 @@ export default {
             showMessage : true,
         }
     },
+    originalRows: null,
     created() {
-        this.onToggle(selectedColumns)
-        this.fitColumnsToWindowWidth()
-
+        this.originalRows = {};
+        this.filtredTableDataByMatch = this.tableData
     },
     mounted() {
+        this.showTheFog = false
+        this.refreshRotate=0,
         this.getSizeOfComulns()
         this.filtredTableData = this.tableData
+        {
+            this.$watch(
+                () => {
+                    return this.$refs.op.visible
+                },
+            (val) => {
+                if (val == false){
+                    document.getElementsByClassName('pi-cog')[0].style.transform = 'rotate('+0+'deg)'
+                }
+
+                this.showTheFog = val
+            }
+            )
+        }
     },
     updated(){
-        this.howManyColumnsIsActive()
     },
     computed:{
+
+        columnsToToggle(){
+            var col = []
+
+            this.columns.forEach(element => {
+                if( !element.lockToToggle ){
+                    col.push(element)
+                }
+            });
+            return col
+        }
+    },
+    methods: {
         updatedTableData(){
 
             let values = this.filters['global']
             let keys = this.columns
-            let result = this.tableData
+            
+            if( this.filterIsActive ){
+                try {
 
-            try {
-
-                let howManyToFind = values.length
-                
-                result = this.tableData.filter(element => {
-                    let find = 0
+                    let howManyToFind = values.length
                     
-                    keys.forEach(key => {
+                    this.filtredTableDataByMatch = this.tableData.filter(element => {
+                        let find = 0
                         
-                        values.forEach(val => {
-                            try {
-                                if( element[key.field].toString().toLowerCase().includes(  val.toLowerCase()  ) ){
-                                    console.log( 'updatedTableDatahowManyToFind2' , find , howManyToFind )
-                                    find++
-                                }
-                            } catch (error) {
-                                
-                            }
+                        keys.forEach(key => {
                             
+                            values.forEach(val => {
+                                try {
+                                    if( element[key.field].toString().toLowerCase().includes(  val.toLowerCase()  ) ){
+                                        console.log( 'updatedTableDatahowManyToFind2' , find , howManyToFind )
+                                        find++
+                                    }
+                                } catch (error) {
+                                    
+                                }
+                                
+                            });
+
                         });
+                        console.log( 'updatedTableDatahowManyToFind3' , find , howManyToFind )
+
+                        if( find == howManyToFind ){
+                            return true
+                        }else{
+                            return false
+                        }
 
                     });
-                    console.log( 'updatedTableDatahowManyToFind3' , find , howManyToFind )
-
-                    if( find == howManyToFind ){
-                        return true
-                    }else{
-                        return false
-                    }
-
-                });
+                }
+                catch (error) {
+                }
             }
-            catch (error) {
-                
-            }
+            let result = this.filtredTableDataByMatch
 
 
             
 
             return result
-        }
-    },
-    methods: {
+        },
+        onRowEditSave(event) {
+            console.log( 'onRowEditSave'  )
+            this.filterIsActive = true
+            
+        },
+        onCellEdit(newValue, props) {
+            if (!this.editingCellRows[props.index]) {
+                this.editingCellRows[props.index] = {...props.data};
+            }
+            console.log( 'onCellEdit' , this.editingCellRows[props.index][props.column.field] ,  newValue  )
+            this.editingCellRows[props.index][props.column.field] = newValue;
+        },
+        onRowEditInit(event) {
+            this.originalRows[event.index] = {...this.filtredTableDataByMatch[event.index]};
+            console.log( 'onRowEditInit' , this.originalRows[event.index]  )
+
+            this.filterIsActive = false
+        },
+        onRowEditCancel(event) {
+            console.log( 'onRowEditCancel' , this.originalRows[event.index] )
+            Vue.set(this.filtredTableDataByMatch, event.index, this.originalRows[event.index]);
+            this.filterIsActive = true
+        },
+        clearFilter(){
+            this.filters={}
+            this.showMessage = true
+            this.makeToast('info' , 'Wyczyszczono filtrowanie')
+            this.refreshRotate+=360
+            var rotate = this.refreshRotate
+
+            document.getElementsByClassName('pi-refresh')[0].style.transition = '1s'
+            document.getElementsByClassName('pi-refresh')[0].style.transform = 'rotate('+rotate+'deg)'
+            
+
+        },
         itemSelect(event){
             this.nowSearch = event.value
         },
         enterClicked(event){
-            if( this.containsObject( this.nowSearch , this.filters.global ) == false ){
+            if( this.containsObject( this.nowSearch , this.filters['global']  ) == false && this.nowSearch.length > 1 ){
                 this.filters.global.push( this.nowSearch )
                 console.log( 'enterClicked222' ,  this.$refs.myAutoComplete  )
             }
@@ -252,16 +339,17 @@ export default {
 
         },
         getFiltredItems(event){
-            console.log( 'getFiltredItems' , event )
+            
+                console.log( 'getFiltredItems' , event )
 
-            if(event.filteredValue.length <= 0 && this.showMessage){
-                this.makeToast('danger', 'Nie znaleziono wyników')
-                this.showMessage = false
-            }
-            else if(event.filteredValue.length > 0){
-                this.showMessage = true
-            }
-            this.filtredTableData = event.filteredValue
+                if(event.filteredValue.length <= 0 && this.showMessage){
+                    this.makeToast('danger', 'Nie znaleziono wyników')
+                    this.showMessage = false
+                }
+                else if(event.filteredValue.length > 0){
+                    this.showMessage = true
+                }
+                this.filtredTableData = event.filteredValue
         },
         makeToast(variant = null , message) {
             this.$bvToast.toast(message, {
@@ -282,7 +370,7 @@ export default {
         },
         moveElementUp(element, position){
             console.log('moveElementUp', element, position )
-            this.selectedColumns = arrayMove(this.selectedColumns, position+1, position);
+            // this.selectedColumns = arrayMove(this.selectedColumns, position+1, position);
         },
         onToggle(value) {
 
@@ -296,7 +384,7 @@ export default {
             correct_array_to_filter.filter((element) => {
 
                 if( this.containsObject( element , value ) ){
-                    selectedColumns.push( element )
+                    selectedColumns.splice( selectedColumns.length-1 , 0 , element )
                 }else{
                     console.log('no')
                 }
@@ -307,7 +395,10 @@ export default {
 
         },
         toggle(event) {
-            console.log(event)
+            document.getElementsByClassName('pi-cog')[0].style.transition = '1s'
+            document.getElementsByClassName('pi-cog')[0].style.transform = 'rotate(180deg)'
+
+
             this.$refs.op.toggle(event);
         },
         columnReorder(event){
@@ -402,7 +493,7 @@ export default {
             this.columns.forEach(col => {
                 var by  = col.field
             
-                this.updatedTableData.filter((element) => {
+                this.filtredTableDataByMatch.filter((element) => {
 
                         try {
                             console.log('SUGGESTEDLEN' ,  element[by].toString().toLowerCase().includes( value.toLowerCase() ) && this.containsObject( element[by].toString() , this.selectedTableData  ) == false )
@@ -421,7 +512,7 @@ export default {
         },
         getSaveStateConfig() {
             return {
-                'cacheKey': 'DocumentsTable11342111'+this.pageName,
+                'cacheKey': 'DocumentsTable1ds1342321231d23dds32sddss11'+this.pageName,
             };
         },
 
@@ -440,6 +531,7 @@ export default {
                 if ( newVal[ newVal.length-1  ] == 'Nie znaleziono wyników' ){
                     this.filters['global'] = oldVal
                 }
+                this.filtredTableDataByMatch = this.updatedTableData()
             
         }
     }
@@ -447,7 +539,28 @@ export default {
 </script>
 
 <style>
-
+.show-me-the-fog{
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background: #00000029;
+    top: 0;
+    left: 0;
+}
+.icon-btn{
+    cursor: pointer;
+    padding: 2px;
+}
+.table-header-options-tittle{
+    float: left;
+}
+.table-header-options-items{
+    float: right;
+}
+.table-header-options{
+    margin-top: 10px;
+    display: flow-root;
+}
 .font-sizer{
     padding: 0px !important;
     margin: 0px !important;
@@ -472,9 +585,6 @@ export default {
     float: right;
     margin-top: 5px;
     margin-left: 5px;
-}
-.teable-header-options{
-    display: flex;
 }
 .table-options-row{
     cursor: pointer;
@@ -510,5 +620,11 @@ tr {
     display: table-row;
     vertical-align: inherit;
     border-color: inherit;
+}
+.p-overlaypanel{
+    left: 15px !important;
+    width: 250px;
+    font-size: 13px;
+    padding: 10px;
 }
 </style>

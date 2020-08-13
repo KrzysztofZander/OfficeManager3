@@ -40,6 +40,7 @@ import Checkbox from 'primevue/checkbox';
 import InputSwitch from 'primevue/inputswitch';
 import MegaMenu from 'primevue/megamenu';
 import AutoComplete from 'primevue/autocomplete';
+import Calendar from 'primevue/calendar';
 
 
 // My import
@@ -90,6 +91,7 @@ Vue.component('Checkbox' , Checkbox );
 Vue.component('InputSwitch' , InputSwitch );
 Vue.component('MegaMenu' , MegaMenu );
 Vue.component('AutoComplete' , AutoComplete );
+Vue.component('Calendar' , Calendar );
 
 
 

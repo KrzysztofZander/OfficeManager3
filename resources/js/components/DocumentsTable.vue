@@ -71,8 +71,21 @@
 
                                 </OverlayPanel>
 
+                                    <Calendar v-model="dateValue" dateFormat="dd.mm.yy" selectionMode="range" >
+                                        <template #date="slotProps">
+                                            <strong v-if="slotProps.date.day > 10 && slotProps.date.day < 15" class="special-day">{{slotProps.date.day}}</strong>
+                                            <template v-else>{{slotProps.date.day}}</template>
+                                        </template>
+                                            <template #header>
+                                                <div class="calendar-date-preset">
+                                                    <span v-for="item in presetData" class="date-preset-row" v-bind:key="item" >{{ item }}</span>
+                                                </div>
+                                            </template>
+                                    </Calendar>
+
                                 <div style="float:right" >
-                                        <AutoComplete type="text" ref="myAutoComplete" v-model="filters['global']"  @item-select="itemSelect" @keyup.enter="enterClicked($event)"  placeholder="Wyszukaj" :multiple="true" @clear="nowSearch=''" :suggestions="selectedTableData" @complete="searchItems( $event )" >
+
+                                        <AutoComplete type="text" ref="myAutoComplete" v-model="filters['global']"  @item-select="itemSelect"  placeholder="Wyszukaj" :multiple="true" @clear="nowSearch=''" :suggestions="selectedTableData" @complete="searchItems( $event )" >
                                             
                                             <template #item="slotProps">
                                                 <div>{{slotProps.item}}</div>
@@ -86,7 +99,7 @@
                             </div>
                         </template>
 
-                        <Column selectionMode="multiple" headerStyle="width: 2em" :key="'col_check'" :columnKey="'col_check'" > </Column>
+                        <Column  selectionMode="multiple" headerStyle="width: 2em" :key="'col_check'" :columnKey="'col_check'" > </Column>
                         
                         <Column v-for="(col, index) of selectedColumns" 
                             :headerStyle="col.headerStyle"
@@ -108,7 +121,7 @@
                         </Column>
                         <Column headerStyle="width:4rem" bodyStyle="text-align:center" :key="'col_remove'" :columnKey="'col_remove'" >
                             <template #body="slotProps">
-                                <Button icon="pi pi-trash" class="p-button-rounded p-button-warning" @click="confirmDeleteProduct(slotProps.data)" />
+                                <Button icon="pi pi-trash" class="p-row-editor-init"  @click="confirmDeleteProduct(slotProps.data)" />
                             </template>
                         </Column>
                         
@@ -137,6 +150,8 @@ export default {
     props:['pageName' ,  'columns' , 'resizedColumnTable' , 'selectedColumns' , 'toogleResize'],
     data() {
         return {
+            dateValue:null,
+            presetData:['Wczoraj', 'Dziś' , 'Zeszły tydzień', 'Zeszły miesiąc' , 'ostatnie 7 dni' , 'ostatnie 30 dni'],
             editingRows: [],
             editingCellRows: {},
             selectedProducts:null,
@@ -488,7 +503,7 @@ export default {
 
             
 
-            this.selectedTableData = []
+            this.selectedTableData = [value]
 
             this.columns.forEach(col => {
                 var by  = col.field
@@ -507,12 +522,12 @@ export default {
             });
             
             if ( this.selectedTableData.length < 1 ){
-                    this.selectedTableData = ['Nie znaleziono wyników']
+                    this.selectedTableData = [value]
             }
         },
         getSaveStateConfig() {
             return {
-                'cacheKey': 'DocumentsTable1ds1342321231d23dds32sddss11'+this.pageName,
+                'cacheKey': 'DocumentsTable1ds1342321231d2321dd21s32sddss11'+this.pageName,
             };
         },
 
@@ -539,6 +554,54 @@ export default {
 </script>
 
 <style>
+.p-calendar{
+    min-width: 328px;
+}
+.p-datepicker-group{
+    min-width: 300px;
+}
+.p-datepicker table td {
+    padding: 2px;
+}
+.p-datepicker table td > span {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 3px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+    border: 1px solid transparent;
+}
+.calendar-date-preset{
+    position: absolute;
+    left: 330px;
+    top: 0;
+    width: 200px;
+    text-align: center;
+    background: white;
+    padding: 10px;
+    display: grid;
+}
+.date-preset-row{
+    padding-bottom: 5px;
+    cursor: pointer;
+
+}
+.date-preset-row:hover{
+    background: #007ad926;
+    transition: .3s;
+    
+}
+.date-preset-row:active{
+    background:#007ad966;
+    transition: .3s;
+    
+}
+.special-day {
+    text-decoration: line-through;
+}
+.p-row-editor-init{
+    width: 1.3rem !important;
+    height: 1.3rem !important
+}
 .show-me-the-fog{
     width: 100%;
     height: 100%;
